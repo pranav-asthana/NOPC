@@ -21,6 +21,7 @@ def build_dataset(cfg, transforms, near_far_size, is_train=True, is_need_all_dat
                     cfg.DATASETS.MASK,
                     cfg.DATASETS.CENTER,
                    transforms, near_far_size)
+    # TODO: Create a new dataset class to load our data (no need to load point clounds, just load images, K, T)
     return datasets
 
 

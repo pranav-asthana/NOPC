@@ -73,8 +73,6 @@ class IBRDynamicDataset(torch.utils.data.Dataset):
         print('dataset initialed.')
 
 
-
-
     def __len__(self):
         return self.cam_num
 

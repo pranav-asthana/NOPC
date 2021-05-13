@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import models_lpf
+import antialiased_cnns
 
 
 
@@ -55,7 +55,7 @@ class down(nn.Module):
         super(down, self).__init__()
         self.mpconv = nn.Sequential(
             nn.MaxPool2d(2, stride=1),
-            models_lpf.Downsample(channels=in_ch,filt_size=3, stride=2),
+            antialiased_cnns.BlurPool(channels=in_ch,filt_size=3, stride=2),
             double_conv(in_ch, out_ch)
         )
 

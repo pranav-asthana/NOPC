@@ -6,8 +6,8 @@ from apex import amp
 import shutil
 import torch.nn.functional as F
 
-sys.path.append('..')
-sys.path.append('.')
+sys.path.insert(0, '..')
+sys.path.insert(0, '.')
 
 from config import cfg
 from data import make_data_loader
@@ -30,7 +30,7 @@ logger.info("Running with config:\n{}".format(cfg))
 shutil.copyfile('configs/config.yml', '%s/config.yml'%output_dir)
 
 train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
-model = build_model(cfg,vertex_list)
+model = build_model(cfg,vertex_list).cuda()
 optimizer = make_optimizer(cfg, model)
 scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
                                cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)

@@ -48,9 +48,18 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         target = batch[7].cuda()
         inds = batch[6].cuda()
         rgbs = batch[8].cuda()
-
         res,depth,features,dir_in_world,rgb,m_point_features = model(point_indexes, in_points, K, T,
                             near_far_max_splatting_size, num_points, rgbs, inds)
+
+        # TODO: Change how losses are being calculated and handled
+        '''
+        1. We feed 1 image into PCGenerator to get a PC
+        2. We feed that same camera pose to get the rendered image and calculate loss (loss1)
+        3. We feed additional 4 camera poses to get rendered images and caluclate those losses (loss2 to loss5)
+        4. We use each individual loss(loss1 to loss5) to update the Unet portion of the pipeline
+        5. We use the weighted sum(for now equal weight) of losses to update the PCGenerator portion of pipeline
+        6. Repeat
+        '''
 
         res.register_hook(res_hook2)
         m_point_features.register_hook(res_hook)
@@ -146,7 +155,7 @@ def do_train(
     logger.info("Start training")
     trainer = create_supervised_trainer(model, optimizer, loss_fn, swriter = swriter )
    
-    checkpointer = ModelCheckpoint(output_dir, 'nr', checkpoint_period, n_saved=10, require_empty=False)
+    checkpointer = ModelCheckpoint(output_dir, 'nr', n_saved=10, require_empty=False)
     timer = Timer(average=True)
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model,'optimizer': optimizer})
