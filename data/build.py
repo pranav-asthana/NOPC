@@ -5,6 +5,7 @@ from torch.utils import data
 
 from .datasets import IBRStaticDataset
 from .datasets import IBRDynamicDataset
+from .datasets import shapenet_views_dataset
 from .transforms import build_transforms
 from .collate_batch import static_collate
 
@@ -39,3 +40,13 @@ def make_data_loader(cfg, is_train=True, is_need_all_data = False):
     )
 
     return data_loader, datasets.get_vertex_num().int(), datasets
+
+def make_data_loader_custom(cfg, dataset_root):
+
+    datasets = shapenet_views_dataset(root_dir=dataset_root, num_views=5, transform=None)
+    num_workers = cfg.DATALOADER.NUM_WORKERS
+    data_loader = data.DataLoader(
+        datasets, shuffle=True, num_workers=num_workers
+    )
+
+    return data_loader, datasets
