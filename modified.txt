@@ -1,0 +1,16 @@
+tools
+utils
+solver
+modeling
+layers
+engine
+data
+config
+configs
+
+
+# To change for new dataset
+engine/trainer.py (Need to figure out how loss is being calculated(RGB-A stuff) and update for new dataset)
+modeling/generatic_model.py and pcprenderer.py (Just need to make sure nothing breaks, don't edit functionality much)
+tools/* (Just the callers need to be updated here, so should be easy)
+ 

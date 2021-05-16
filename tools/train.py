@@ -10,7 +10,7 @@ sys.path.insert(0, '..')
 sys.path.insert(0, '.')
 
 from config import cfg
-from data import make_data_loader
+from data import make_data_loader, make_data_loader_custom
 from engine.trainer import do_train
 from modeling import build_model
 from solver import make_optimizer, WarmupMultiStepLR
@@ -29,8 +29,10 @@ logger = setup_logger("rendering_model", output_dir, 0)
 logger.info("Running with config:\n{}".format(cfg))
 shutil.copyfile('configs/config.yml', '%s/config.yml'%output_dir)
 
-train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
-model = build_model(cfg,vertex_list).cuda()
+# train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
+# dataset.__getitem__(0)
+train_loader, dataset = make_data_loader_custom(cfg, "demo/shapenet_data")
+model = build_model(cfg).cuda()
 optimizer = make_optimizer(cfg, model)
 scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
                                cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)

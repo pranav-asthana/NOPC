@@ -102,7 +102,13 @@ class IBRDynamicDataset(torch.utils.data.Dataset):
         img=torch.cat([img,ROI],dim=0)
 
         # return img, self.vs[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:], index, self.Ts[cam_id], self.Ks[cam_id], self.near_far_size, self.vs_rgb[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:]
-        return img, self.vs[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:], index, T, K, self.near_far_size, self.vs_rgb[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:]
+        return img, 
+        self.vs[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:], 
+        index, 
+        T, 
+        K, 
+        self.near_far_size, 
+        self.vs_rgb[self.vs_index[frame_id]:self.vs_index[frame_id]+self.vs_num[frame_id],:]
 
     def get_vertex_num(self):
         return torch.Tensor(self.vs_num)

@@ -67,6 +67,7 @@ class PCGenerator(nn.Module):
       # TODO: concat feature vectors with camera params into variable z
       # Do we need to or not? Try without first
       z = feature_vectors
+      print(z.shape)
 
       for i in range(len(self.fc_layers)):
         z = self.fc_layers[i](z)

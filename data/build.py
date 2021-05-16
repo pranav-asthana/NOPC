@@ -43,7 +43,7 @@ def make_data_loader(cfg, is_train=True, is_need_all_data = False):
 
 def make_data_loader_custom(cfg, dataset_root):
 
-    datasets = shapenet_views_dataset(root_dir=dataset_root, num_views=5, transform=None)
+    datasets = shapenet_views_dataset(root_dir=dataset_root, near_far_size=cfg.INPUT.NEAR_FAR_SIZE, num_views=5, transform=None)
     num_workers = cfg.DATALOADER.NUM_WORKERS
     data_loader = data.DataLoader(
         datasets, shuffle=True, num_workers=num_workers

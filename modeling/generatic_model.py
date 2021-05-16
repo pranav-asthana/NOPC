@@ -10,7 +10,7 @@ from .PointGenerator import PCGenerator
 class Generatic_Model(torch.nn.Module):
 
 
-    def __init__(self, tar_width, tar_height, vertex_list, feature_dim, dataset=None, use_rgb = False ):
+    def __init__(self, tar_width, tar_height, feature_dim, dataset=None, use_rgb = False ):
         super(Generatic_Model, self).__init__()
         self.dataset = dataset
         # self.pcpr_parameters = PCPRParameters(vertex_list, feature_dim) # We don't want to use this
@@ -23,15 +23,13 @@ class Generatic_Model(torch.nn.Module):
         self.use_rgb = use_rgb
         if use_rgb:
             input_channels = 3
-        
-        self.image = torch.randn(1, 3, 200, 200).cuda() # placeholder image
 
 
-    def forward(self, point_indexes, in_points, K, T,
-           near_far_max_splatting_size, num_points, rgbs, inds=None):
+    def forward(self, images, K, T,
+           near_far_max_splatting_size, inds=None):
 
 
-        num_points = num_points.int()
+        # num_points = num_points.int()
 
 
         # print(point_indexes) # Not sure what this is
@@ -64,13 +62,15 @@ class Generatic_Model(torch.nn.Module):
         # Not sure what default_features does
         # TODO: Need to get input images here to be fed into network, not points
         # print(in_points.shape, p_parameters.shape)
-        in_points, p_parameters, default_features = self.pc_generator((self.image,))
+        print(images[0].shape)
+        in_points, p_parameters, default_features = self.pc_generator((images[0],))
 
         # print(in_points.shape, p_parameters.shape)
-        num_points = torch.tensor([4096, 4096, 4096])
         
         batch_size = K.size(0)
         dim_features = default_features.size(0)
+
+        num_points = torch.tensor([4096]*batch_size)
 
         m_point_features = []
         beg = 0

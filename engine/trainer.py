@@ -37,19 +37,35 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
     def _update(engine, batch):
         model.train()
         optimizer.zero_grad()
+
+        print(len(batch))
         
 
-        in_points = batch[1].cuda()
-        K = batch[2].cuda()
-        T = batch[3].cuda()
-        near_far_max_splatting_size = batch[5]
-        num_points = batch[4]
-        point_indexes = batch[0]
-        target = batch[7].cuda()
-        inds = batch[6].cuda()
-        rgbs = batch[8].cuda()
-        res,depth,features,dir_in_world,rgb,m_point_features = model(point_indexes, in_points, K, T,
-                            near_far_max_splatting_size, num_points, rgbs, inds)
+        # in_points = batch[1].cuda()
+        # K = batch[2].cuda() # intrinsic
+        # T = batch[3].cuda() # extrinsic
+        # near_far_max_splatting_size = batch[5]
+        # num_points = batch[4]
+        # point_indexes = batch[0]
+        # target = batch[7].cuda()
+        # inds = batch[6].cuda() # Blacklist indexes, can be ignored
+        # rgbs = batch[8].cuda()
+
+        images = batch[0][0].cuda()
+        K = batch[1][0].cuda()
+        T = batch[2][0].cuda()
+        near_far_max_splatting_size = batch[3].cuda()
+        label = batch[4][0]
+        inds = None
+
+        print(images.shape)
+        print(K.shape)
+        print(T.shape)
+        print(near_far_max_splatting_size)
+        print(label)
+
+        res,depth,features,dir_in_world,rgb,m_point_features = model(images, K, T,
+                            near_far_max_splatting_size, inds)
 
         # TODO: Change how losses are being calculated and handled
         '''
