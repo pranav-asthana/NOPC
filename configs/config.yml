@@ -32,4 +32,4 @@ SOLVER:
 TEST:
   IMS_PER_BATCH: 256
 
-OUTPUT_DIR: "demo/models/exp1"
+OUTPUT_DIR: "demo/shapenet_models/exp1"

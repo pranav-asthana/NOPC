@@ -18,12 +18,18 @@ from layers import make_loss
 from utils.logger import setup_logger
 from torch.utils.tensorboard import SummaryWriter
 import torch
+from ignite.handlers import Checkpoint
 torch.cuda.set_device(0)
 
 cfg.merge_from_file('configs/config.yml')
 cfg.freeze()
 
 output_dir = cfg.OUTPUT_DIR
+
+loading_model = False
+if os.path.exists(output_dir):
+    loading_model = True
+
 writer = SummaryWriter(log_dir=os.path.join(output_dir,'tensorboard'))
 logger = setup_logger("rendering_model", output_dir, 0)
 logger.info("Running with config:\n{}".format(cfg))
@@ -32,8 +38,19 @@ shutil.copyfile('configs/config.yml', '%s/config.yml'%output_dir)
 # train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
 # dataset.__getitem__(0)
 train_loader, dataset = make_data_loader_custom(cfg)
+
 model = build_model(cfg).cuda()
 optimizer = make_optimizer(cfg, model)
+
+if loading_model:
+    to_load = {"model": model, "optimizer": optimizer}
+    epoch = max([int(fname.replace('nr_checkpoint_', '').replace('.pt', '')) for fname in os.listdir(output_dir) if 'nr_checkpoint' in fname])
+    checkpoint_fp = os.path.join(output_dir, "nr_checkpoint_" + str(epoch) + ".pt")
+    checkpoint = torch.load(checkpoint_fp)
+    Checkpoint.load_objects(to_load=to_load, checkpoint=checkpoint)
+
+
+
 scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
                                cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 loss_fn = make_loss()

@@ -6,10 +6,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-sys.path.append('..')
-sys.path.append('.')
+sys.path.insert(0, '..')
+sys.path.insert(0, '.')
 from config import cfg
-from data import make_data_loader
+from data import make_data_loader_custom
 from engine.trainer import do_train
 from modeling import build_model
 from solver import make_optimizer, WarmupMultiStepLR
@@ -18,51 +18,32 @@ from utils.logger import setup_logger
 from data.datasets.utils import campose_to_extrinsic, read_intrinsics
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
+from ignite.handlers import Checkpoint
 import cv2
 torch.cuda.set_device(0)
 
-model_path=sys.argv[1]
-epoch = sys.argv[2]
-camposFile=os.path.join(sys.argv[3],'CamPose.inf')
-intriFile=os.path.join(sys.argv[3],'Intrinsic.inf')
-para_file = 'nr_model_%s.pth' % epoch
+model_path = sys.argv[1]
+epoch = sys.argv[2] if len(sys.argv) > 2 else None
+# para_file = 'nr_model_%s.pth' % epoch
+para_file = 'nr_checkpoint_%s.pt' % epoch
 
 cfg.merge_from_file(os.path.join(model_path,'config.yml'))
 cfg.SOLVER.IMS_PER_BATCH = 1
 cfg.freeze()
 
 writer = SummaryWriter(log_dir=os.path.join(model_path,'tensorboard_test'))
-test_loader, vertex_list,dataset = make_data_loader(cfg, is_train=False)
+test_loader, dataset = make_data_loader_custom(cfg)
 
-model = build_model(cfg, vertex_list)
-model.load_state_dict(torch.load(os.path.join(model_path,para_file),map_location='cpu'))
-model.eval()
-model = model.cuda()
-
-
-for batch in test_loader:
-    in_points = batch[1].cuda()
-    K = batch[2].cuda()
-    T = batch[3].cuda()
-    near_far_max_splatting_size = batch[5]
-    num_points = batch[4]
-    point_indexes = batch[0]
-    target = batch[-1].cuda()
-    break
-    
-
-picScale=cfg.INPUT.SIZE_TEST[0]/cfg.INPUT.SIZE_RAW[0]
-# picScale=720/1920
-
-camposes = np.loadtxt(camposFile)
-Ts = torch.Tensor( campose_to_extrinsic(camposes) )
-camNum = Ts.size(0)
-
-Ks = read_intrinsics(intriFile)
-for i in range(camNum):
-    Ks[i,0:2,:]=Ks[i,0:2,:]*picScale
-Ks = torch.Tensor(Ks)
-    
+model = build_model(cfg)
+# model.load_state_dict(torch.load(os.path.join(model_path,para_file),map_location='cpu'))
+optimizer = None
+to_load = {"model": model}
+if epoch is None:
+    epoch = max([int(fname.replace('nr_checkpoint_', '').replace('.pt', '')) for fname in os.listdir(model_path) if 'nr_checkpoint' in fname])
+print("Loading model from epoch " + str(epoch))
+checkpoint_fp = os.path.join(model_path, "nr_checkpoint_" + str(epoch) + ".pt")
+checkpoint = torch.load(checkpoint_fp)
+Checkpoint.load_objects(to_load=to_load, checkpoint=checkpoint)
 
 if not os.path.exists(os.path.join(model_path,'res_%s'%epoch)):
     os.mkdir(os.path.join(model_path,'res_%s'%epoch))
@@ -73,25 +54,49 @@ if not os.path.exists(os.path.join(model_path,'res_%s/alpha'%epoch)):
 if not os.path.exists(os.path.join(model_path,'res_%s/rgba'%epoch)):
     os.mkdir(os.path.join(model_path,'res_%s/rgba'%epoch))
 
-for ID in range(camNum):
-    T = Ts[ID:ID+1,:,:].cuda()
-    K = Ks[ID:ID+1,:,:].cuda()
-    res,depth,features,dir_in_world,rgb,point_features = model(point_indexes, in_points, K, T,
-                        near_far_max_splatting_size, num_points,target)
+model.eval()
+model = model.cuda()
+
+batch_num = 0
+for batch in test_loader:
+    batch_num += 1
+    if batch_num % 20 == 0:
+        print(f"Batch {batch_num}/{len(test_loader)}")
+    # in_points = batch[1].cuda()
+    # K = batch[2].cuda()
+    # T = batch[3].cuda()
+    # near_far_max_splatting_size = batch[5]
+    # num_points = batch[4]
+    # point_indexes = batch[0]
+    # target = batch[-1].cuda()
+
+    target = batch[0][0].cuda()
+    K = batch[1][0].cuda()
+    T = batch[2][0].cuda()
+    near_far_max_splatting_size = batch[3].cuda()
+    label = batch[4][0]
+    inds = None
+
+    near_far_max_splatting_size = near_far_max_splatting_size.repeat(K.shape[0], 1)    
+    camNum = T.size(0)
+    
+    res,depth,features,dir_in_world,rgb,point_features = model(target[:1, :3, :, :], K, T,
+                        near_far_max_splatting_size, None)
 
     depth = (depth - torch.min(depth))
     depth = depth / torch.max(depth)
-        
-    img_t = res.detach().cpu()[0]
-    mask_t = img_t[3:4,:,:]
-    img = cv2.cvtColor(img_t.permute(1,2,0).numpy()*255.0,cv2.COLOR_BGR2RGB)
-    mask = mask_t.permute(1,2,0).numpy()*255.0
-    rgba=img*mask/255.0+(255.0-mask)
-    
-    cv2.imwrite(os.path.join(model_path,'res_%s/rgb/img_%04d.jpg'%(epoch,ID+1)),img)
-    cv2.imwrite(os.path.join(model_path,'res_%s/alpha/img_%04d.jpg'%(epoch,ID+1)  ),mask)
-    cv2.imwrite(os.path.join(model_path,'res_%s/rgba/img_%04d.jpg'%(epoch,ID+1)  ),rgba)
 
+    for ID in range(camNum):        
+        img_t = res.detach().cpu()[ID]
+        mask_t = img_t[3:4,:,:]
+        img = cv2.cvtColor(img_t.permute(1,2,0).numpy()*255.0,cv2.COLOR_BGR2RGB)
+        mask = mask_t.permute(1,2,0).numpy()*255.0
+        rgba=img*mask/255.0+(255.0-mask)
+        
+        cv2.imwrite(os.path.join(model_path,'res_%s/rgb/img_'%(epoch) +str(batch_num)+'_%01d.jpg'%(ID+1)),img)
+        cv2.imwrite(os.path.join(model_path,'res_%s/alpha/img_'%(epoch) +str(batch_num)+'_%01d.jpg'%(ID+1)  ),mask)
+        cv2.imwrite(os.path.join(model_path,'res_%s/rgba/img_'%(epoch) +str(batch_num)+'_%01d.jpg'%(ID+1)  ),rgba)
+    
 print('Render done.')
 
 
