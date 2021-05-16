@@ -31,7 +31,7 @@ shutil.copyfile('configs/config.yml', '%s/config.yml'%output_dir)
 
 # train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
 # dataset.__getitem__(0)
-train_loader, dataset = make_data_loader_custom(cfg, "demo/shapenet_data")
+train_loader, dataset = make_data_loader_custom(cfg)
 model = build_model(cfg).cuda()
 optimizer = make_optimizer(cfg, model)
 scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,

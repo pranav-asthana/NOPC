@@ -25,7 +25,7 @@ class Generatic_Model(torch.nn.Module):
             input_channels = 3
 
 
-    def forward(self, images, K, T,
+    def forward(self, image, K, T,
            near_far_max_splatting_size, inds=None):
 
 
@@ -62,7 +62,7 @@ class Generatic_Model(torch.nn.Module):
         # Not sure what default_features does
         # TODO: Need to get input images here to be fed into network, not points
         # print(in_points.shape, p_parameters.shape)
-        in_points, p_parameters, default_features = self.pc_generator((images[:1, :3],))
+        in_points, p_parameters, default_features = self.pc_generator((image,))
 
         # print(in_points.shape, p_parameters.shape)
         

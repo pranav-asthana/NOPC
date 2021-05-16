@@ -29,8 +29,6 @@ class PCPRFunction(torch.autograd.Function):
         batch_size = cam_intrinsic.size(0)
         dim_features = point_features.size(0)
 
-        print(cam_extrinsic.size(0), batch_size, near_far_max_splatting_size.size(0), num_points.size(0))
-
         if cam_extrinsic.size(0) != batch_size or near_far_max_splatting_size.size(0)!=batch_size or\
             num_points.size(0)!= batch_size:
             raise Exception('[PCPR] batch_sizes are not consistant.')

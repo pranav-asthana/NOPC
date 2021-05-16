@@ -38,7 +38,7 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         model.train()
         optimizer.zero_grad()
 
-        print(len(batch))
+        # print(len(batch))
         
 
         # in_points = batch[1].cuda()
@@ -51,7 +51,7 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         # inds = batch[6].cuda() # Blacklist indexes, can be ignored
         # rgbs = batch[8].cuda()
 
-        images = batch[0][0].cuda()
+        target = batch[0][0].cuda()
         K = batch[1][0].cuda()
         T = batch[2][0].cuda()
         near_far_max_splatting_size = batch[3].cuda()
@@ -60,14 +60,19 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
 
         near_far_max_splatting_size = near_far_max_splatting_size.repeat(K.shape[0], 1)
 
-        print(images.shape)
-        print(K.shape)
-        print(T.shape)
-        print(near_far_max_splatting_size, near_far_max_splatting_size.shape)
-        print(label)
+        # print(target.shape)
+        # print(K.shape)
+        # print(T.shape)
+        # print(near_far_max_splatting_size, near_far_max_splatting_size.shape)
+        # print(label)
 
-        res,depth,features,dir_in_world,rgb,m_point_features = model(images, K, T,
+        res,depth,features,dir_in_world,rgb,m_point_features = model(target[:1, :3, :, :], K, T,
                             near_far_max_splatting_size, inds)
+
+        # print(res.shape)
+        # print(depth.shape)
+        # print(features.shape)
+        # print(m_point_features.shape)
 
         # TODO: Change how losses are being calculated and handled
         '''
@@ -82,36 +87,39 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         res.register_hook(res_hook2)
         m_point_features.register_hook(res_hook)
 
-        depth_mask = depth[:,0:1,:,:].detach().clone()
-        depth_mask = depth_mask + target[:,3:4,:,:]
-        depth_mask[depth_mask>0] = 1
-        depth_mask = torch.clamp(depth_mask,0,1.0)
+        # depth_mask = depth[:,0:1,:,:].detach().clone()
+        # depth_mask = depth_mask + target[:,3:4,:,:]
+        # depth_mask[depth_mask>0] = 1
+        # depth_mask = torch.clamp(depth_mask,0,1.0)
 
 
-        cur_mask = (target[:,4:5,:,:]*depth_mask).repeat(1,3,1,1)
+        # cur_mask = (target[:,4:5,:,:]*depth_mask).repeat(1,3,1,1)
 
 
-        target[:,0:3,:,:] = target[:,0:3,:,:]*cur_mask
-        res[:,0:3,:,:] = res[:,0:3,:,:]*cur_mask
+        # target[:,0:3,:,:] = target[:,0:3,:,:]*cur_mask
+        # res[:,0:3,:,:] = res[:,0:3,:,:]*cur_mask
 
 
 
-        vis_rgb = res[0,0:3,:,:].detach().clone()
-        vis_rgb[cur_mask[0]<0.1] += 0.5
+        # vis_rgb = res[0,0:3,:,:].detach().clone()
+        # vis_rgb[cur_mask[0]<0.1] += 0.5
 
 
-        render_mask = res[0][3:4,:,:].detach().clone()
-        render_mask[target[0,4:5,:,:]<0.1] += 0.5
+        # render_mask = res[0][3:4,:,:].detach().clone()
+        # render_mask[target[0,4:5,:,:]<0.1] += 0.5
 
-        render_mask = torch.clamp(render_mask,0,1.0)
-
-
-        res[:,3,:,:] = res[:,3,:,:] * target[:,4,:,:]
-
-        loss1, loss2, loss3 = loss_fn(res, target[:,0:4,:,:])
+        # render_mask = torch.clamp(render_mask,0,1.0)
 
 
-        l = loss1 + loss2
+        # res[:,3,:,:] = res[:,3,:,:] * target[:,4,:,:]
+
+        ## New loss calculations
+        # Skip all this stuff above since we are not doing any transformations to data currently
+
+        loss1, loss2, loss3 = loss_fn(res, target[:,0:4,:,:]) # Loss over all 5 images
+
+
+        l = loss1 + loss2 # Reconstruction + perceptual
 
         # l.backward()
         with amp.scale_loss(l, optimizer) as scaled_loss:
@@ -144,9 +152,9 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         swriter.add_image('vis/GT', target[0][0:3], iters)
         swriter.add_image('vis/GT_alpha', target[0][3:4], iters)
         swriter.add_image('vis/depth', depth[0], iters)
-        swriter.add_image('vis/ROI', target[0][4:5], iters)
-        if model.dataset is not None:
-            swriter.add_image('vis/RGB', rgb[0], iters)
+        # swriter.add_image('vis/ROI', target[0][4:5], iters)
+        # if model.dataset is not None:
+        #     swriter.add_image('vis/RGB', rgb[0], iters)
 
 
 

@@ -5,13 +5,13 @@ MODEL:
 
 
 INPUT:
-  SIZE_TRAIN: [200,200]
-  SIZE_TEST: [200,200]
+  SIZE_TRAIN: [256,256]
+  SIZE_TEST: [256,256]
   NEAR_FAR_SIZE: [6.0, 16.0, 1]
   USE_RGB: False
 
 DATASETS:
-  TRAIN: "demo/data/Hair"
+  TRAIN: "demo/shapenet_data"
   MASK: True
   CENTER: [400,400]
   SHIFT: 10
@@ -32,4 +32,4 @@ SOLVER:
 TEST:
   IMS_PER_BATCH: 256
 
-OUTPUT_DIR: "demo/models/Hair/exp1"
+OUTPUT_DIR: "demo/models/exp1"
