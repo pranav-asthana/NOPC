@@ -58,10 +58,12 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
         label = batch[4][0]
         inds = None
 
+        near_far_max_splatting_size = near_far_max_splatting_size.repeat(K.shape[0], 1)
+
         print(images.shape)
         print(K.shape)
         print(T.shape)
-        print(near_far_max_splatting_size)
+        print(near_far_max_splatting_size, near_far_max_splatting_size.shape)
         print(label)
 
         res,depth,features,dir_in_world,rgb,m_point_features = model(images, K, T,

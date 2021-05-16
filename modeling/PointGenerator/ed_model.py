@@ -30,8 +30,8 @@ class PCGenerator(nn.Module):
 
         ########
 
-        # TODO: That number below depends on the input image dimension. Need to change. This is only for 200*200 images
-        self.fc_layers = [nn.Linear(36864*images, k*4), nn.ReLU()]
+        # TODO: That number below depends on the input image dimension. Need to change. This is only for 256*256 images
+        self.fc_layers = [nn.Linear(65536*images, k*4), nn.ReLU()]
         self.fc_layers += [nn.Linear(k*4, k*4), nn.ReLU()]
 
         ########
@@ -67,7 +67,6 @@ class PCGenerator(nn.Module):
       # TODO: concat feature vectors with camera params into variable z
       # Do we need to or not? Try without first
       z = feature_vectors
-      print(z.shape)
 
       for i in range(len(self.fc_layers)):
         z = self.fc_layers[i](z)

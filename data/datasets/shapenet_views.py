@@ -20,7 +20,6 @@ class shapenet_views_dataset(Dataset):
 		temp_camera_dict = pickle.load(open(os.path.join(root_dir, 'camera_matrices.pkl'), 'rb'))
 		self.camera_intrinsics = temp_camera_dict['intrinsic_matrices']
 		self.camera_extrinsics = temp_camera_dict['extrinsic_matrices']
-		print(self.camera_extrinsics.shape)
 		self.num_views = num_views
 
 	def __len__(self):
@@ -34,5 +33,5 @@ class shapenet_views_dataset(Dataset):
 		if self.transform:
 			img = self.transform(img)
 		#Temp stuff
-		img = img.reshape(1, 5, 4, 256, 256)
+		img = img.reshape(5, 4, 256, 256)
 		return img, self.camera_intrinsics, self.camera_extrinsics, self.near_far_size, label
