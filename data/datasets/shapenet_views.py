@@ -72,6 +72,7 @@ class shapenet_views_dataset(Dataset):
 		if self.transform:
 			img = self.transform(img)
 
-		img = img.reshape(self.batch_size, 4, 256, 256)
+		# print(img.shape)
+		img = img.permute(0, 3, 1, 2)
 		cam_intrs = self.camera_intrinsics[:self.batch_size, ...]
 		return img, cam_intrs, cam_extr, self.near_far_size, label
