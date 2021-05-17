@@ -44,10 +44,13 @@ optimizer = make_optimizer(cfg, model)
 
 if loading_model:
     to_load = {"model": model, "optimizer": optimizer}
-    epoch = max([int(fname.replace('nr_checkpoint_', '').replace('.pt', '')) for fname in os.listdir(output_dir) if 'nr_checkpoint' in fname])
-    checkpoint_fp = os.path.join(output_dir, "nr_checkpoint_" + str(epoch) + ".pt")
-    checkpoint = torch.load(checkpoint_fp)
-    Checkpoint.load_objects(to_load=to_load, checkpoint=checkpoint)
+    chkpt_epochs_list = [int(fname.replace('nr_checkpoint_', '').replace('.pt', '')) for fname in os.listdir(output_dir) if 'nr_checkpoint' in fname]
+    print('DEBUG: chkpt_epochs_list: {}'.format(chkpt_epochs_list))
+    if chkpt_epochs_list:
+        epoch = max(chkpt_epochs_list)
+        checkpoint_fp = os.path.join(output_dir, "nr_checkpoint_" + str(epoch) + ".pt")
+        checkpoint = torch.load(checkpoint_fp)
+        Checkpoint.load_objects(to_load=to_load, checkpoint=checkpoint)
 
 
 

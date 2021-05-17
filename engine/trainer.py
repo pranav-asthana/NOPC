@@ -60,19 +60,19 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
 
         near_far_max_splatting_size = near_far_max_splatting_size.repeat(K.shape[0], 1)
 
-        # print(target.shape)
-        # print(K.shape)
-        # print(T.shape)
-        # print(near_far_max_splatting_size, near_far_max_splatting_size.shape)
-        # print(label)
+        # print('DEBUG: Target shape: {}'.format(target.shape))
+        # print('DEBUG: K shape: {}'.format(K.shape))
+        # print('DEBUG: T shape: {}'.format(T.shape))
+        # print('DEBUG: nearfar_max_splat_size: {} | shape: {}'.format(near_far_max_splatting_size, near_far_max_splatting_size.shape))
+        # print('DEBUG: label: ', label)
 
         res,depth,features,dir_in_world,rgb,m_point_features = model(target[:1, :3, :, :], K, T,
                             near_far_max_splatting_size, inds)
 
-        # print(res.shape)
-        # print(depth.shape)
-        # print(features.shape)
-        # print(m_point_features.shape)
+        # print('DEBUG: res shape: ', res.shape)
+        # print('DEBUG: depth shape: ', depth.shape)
+        # print('DEBUG: features shape: ', features.shape)
+        # print('DEBUG: m_point_features shape: ', m_point_features.shape)
 
         # TODO: Change how losses are being calculated and handled
         '''
@@ -115,6 +115,8 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
 
         ## New loss calculations
         # Skip all this stuff above since we are not doing any transformations to data currently
+        # print('DEBUG: result shape: {}'.format(res.shape))
+        # print('DEBUG: target shape: {}'.format(target.shape))
 
         loss1, loss2, loss3 = loss_fn(res, target[:,0:4,:,:]) # Loss over all 5 images
 

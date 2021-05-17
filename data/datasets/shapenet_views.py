@@ -10,6 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 
 class shapenet_views_dataset(Dataset):
 	def __init__(self, root_dir, near_far_size, is_train=True, num_views=20, transform=None):
+		print('DEBUG: dataset root directory: "{}"'.format(root_dir))
 		self.root_dir = root_dir
 		self.transform = transform
 		self.near_far_size = torch.Tensor(near_far_size)
@@ -54,19 +55,23 @@ class shapenet_views_dataset(Dataset):
 		idx_start = idx*self.num_views
 		label = self.file_list[idx_start].split("/")[-2]
 
+		cam_extr = None
+		img = None
 		if self.is_train:
 			views_to_sample = np.random.permutation(self.sampling_indexes[1:])[:self.batch_size]
 			views_to_sample[0] = 0
 			# print('DEBUG: views_to_sample: {}'.format(views_to_sample))
 			img = torch.stack([torch.from_numpy(plt.imread(self.file_list[idx_start+i])) for i in views_to_sample])
+			cam_extr = torch.stack([self.camera_extrinsics[sidx] for sidx in views_to_sample])
 			# img = torch.stack([img[sidx] for sidx in views_to_sample])
 		else:
 			img = torch.stack([torch.from_numpy(plt.imread(self.file_list[idx_start+i])) for i in self.sampling_indexes])
+			cam_extr = torch.stack([self.camera_extrinsics[sidx] for sidx in self.sampling_indexes])
 			# img = torch.stack([img[sidx] for sidx in self.sampling_indexes])
 		
-		cam_extr = torch.stack([self.camera_extrinsics[sidx] for sidx in self.sampling_indexes])
 		if self.transform:
 			img = self.transform(img)
 
-		img = img.reshape(1, self.batch_size, 4, 256, 256)
-		return img, self.camera_intrinsics[:self.samp_size,...], cam_extr, self.near_far_size, label
+		img = img.reshape(self.batch_size, 4, 256, 256)
+		cam_intrs = self.camera_intrinsics[:self.batch_size, ...]
+		return img, cam_intrs, cam_extr, self.near_far_size, label
