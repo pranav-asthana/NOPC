@@ -175,7 +175,6 @@ def do_train(
         swriter
 ):
     log_period = cfg.SOLVER.LOG_PERIOD
-    log_period = 1
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
     output_dir = cfg.OUTPUT_DIR
     epochs = cfg.SOLVER.MAX_EPOCHS
@@ -187,9 +186,7 @@ def do_train(
     checkpointer = ModelCheckpoint(output_dir, 'nr', n_saved=10, require_empty=False)
     timer = Timer(average=True)
 
-    # trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model,'optimizer': optimizer})
-    trainer.add_event_handler(Events.ITERATION_COMPLETED, checkpointer, {'model': model,'optimizer': optimizer})
-
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model,'optimizer': optimizer})
 
     timer.attach(trainer, start=Events.EPOCH_STARTED, resume=Events.ITERATION_STARTED,
                  pause=Events.ITERATION_COMPLETED, step=Events.ITERATION_COMPLETED)
