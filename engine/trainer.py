@@ -121,9 +121,9 @@ def create_supervised_trainer(model, optimizer, loss_fn, use_cuda=True, swriter 
 
         l = loss1 + loss2 # Reconstruction + perceptual
 
-        # l.backward()
-        with amp.scale_loss(l, optimizer) as scaled_loss:
-            scaled_loss.backward()
+        l.backward()
+        # with amp.scale_loss(l, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
 
 
         optimizer.step()

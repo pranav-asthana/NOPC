@@ -32,7 +32,7 @@ cfg.SOLVER.IMS_PER_BATCH = 1
 cfg.freeze()
 
 writer = SummaryWriter(log_dir=os.path.join(model_path,'tensorboard_test'))
-test_loader, dataset = make_data_loader_custom(cfg)
+test_loader, dataset = make_data_loader_custom(cfg, is_train=False)
 
 model = build_model(cfg)
 # model.load_state_dict(torch.load(os.path.join(model_path,para_file),map_location='cpu'))

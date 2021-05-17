@@ -37,7 +37,7 @@ shutil.copyfile('configs/config.yml', '%s/config.yml'%output_dir)
 
 # train_loader, vertex_list,dataset = make_data_loader(cfg, is_train=True)
 # dataset.__getitem__(0)
-train_loader, dataset = make_data_loader_custom(cfg)
+train_loader, dataset = make_data_loader_custom(cfg, is_train = True)
 
 model = build_model(cfg).cuda()
 optimizer = make_optimizer(cfg, model)
@@ -54,7 +54,7 @@ if loading_model:
 scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
                                cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 loss_fn = make_loss()
-model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+# model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
 
 do_train(
         cfg,
